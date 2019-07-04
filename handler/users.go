@@ -68,6 +68,19 @@ func UpdateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, user)
 }
 
+func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	v := vars["id"]
+	id, err := strconv.Atoi(v)
+	if err != nil {
+		fmt.Print(err)
+	}
+	var result model.UserVisitsArray
+	db.Table("Visit").Select("Visit.mark, Visit.visited_at, Location.place").Joins("right join Location on Location.id = Visit.location").
+		Where("Visit.user = ?", id).Order("Visit.visited_at").Scan(&result.Visits)
+	respondJSON(w, http.StatusOK, result)
+}
+
 func getUserOr404(db *gorm.DB, id int, w http.ResponseWriter, r *http.Request) *model.User {
 	user := model.User{}
 	if err := db.First(&user, model.User{ID: id}).Error; err != nil {

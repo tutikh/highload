@@ -44,6 +44,7 @@ func (a *App) setRouters() {
 	a.Post("/visits", a.CreateVisit)
 	a.Get("/visits/{id}", a.GetVisit)
 	a.Put("/visits/{id}", a.UpdateVisit)
+	a.Get("/users/{id}/visits", a.GetUserVisits)
 }
 
 func (a *App) Get(path string, f func(w http.ResponseWriter, r *http.Request)) {
@@ -92,6 +93,10 @@ func (a *App) GetVisit(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) UpdateVisit(w http.ResponseWriter, r *http.Request) {
 	handler.UpdateVisit(a.DB, w, r)
+}
+
+func (a *App) GetUserVisits(w http.ResponseWriter, r *http.Request) {
+	handler.GetUserVisits(a.DB, w, r)
 }
 
 func (a *App) Run(host string) {

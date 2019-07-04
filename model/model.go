@@ -31,6 +31,16 @@ type Visit struct {
 	Mark      int `json:"mark"`
 }
 
+type UserVisits struct {
+	Mark      int    `json:"mark"`
+	VisitedAt int    `json:"visited_at"`
+	Place     string `json:"place"`
+}
+
+type UserVisitsArray struct {
+	Visits []UserVisits `json:"visits"`
+}
+
 func (User) TableName() string {
 	return "User"
 }
