@@ -6,29 +6,29 @@ import (
 )
 
 type User struct {
-	ID         string `gorm:"unique" json:"id"`
-	Email      string `json:"email"`
-	First_name string `json:"firstname"`
-	Last_name  string `json:"lastname"`
-	Gender     string `json:"gender"`
-	Birth_date int    `json:"birthdate"`
-	Age        int    `json:"age"`
+	ID        int    `gorm:"unique" json:"id"`
+	Email     string `json:"email"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Gender    string `json:"gender"`
+	BirthDate int    `json:"birth_date"`
+	Age       int    `json:"age"`
 }
 
 type Location struct {
-	ID       uint
-	Distance int
-	City     string
-	Place    string
-	Country  string
+	ID       int    `gorm:"unique" json:"id"`
+	Distance int    `json:"distance"`
+	City     string `json:"city"`
+	Place    string `json:"place"`
+	Country  string `json:"country"`
 }
 
 type Visit struct {
-	ID         uint
-	Location   int
-	User       int
-	Visited_at int
-	Mark       int
+	ID        int `gorm:"unique" json:"id"`
+	Location  int `json:"location"`
+	User      int `json:"user"`
+	VisitedAt int `json:"visited_at"`
+	Mark      int `json:"mark"`
 }
 
 func (User) TableName() string {
