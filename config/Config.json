@@ -1,0 +1,9 @@
+{
+  "DB": {
+    "Dialect": "mysql",
+    "Username": "root",
+    "Password": "123",
+    "Name": "trav",
+    "Charset": "utf8"
+  }
+}

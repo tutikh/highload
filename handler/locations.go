@@ -76,7 +76,7 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		fmt.Print(err)
 	}
 	var result model.LocationAvg
-	db.Debug().Table("Visit").Select("AVG(Visit.mark) as avg").Where("Visit.location = ?", id).Scan(&result)
+	db.Table("Visit").Select("AVG(Visit.mark) as avg").Where("Visit.location = ?", id).Scan(&result)
 	respondJSON(w, http.StatusOK, result)
 }
 

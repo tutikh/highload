@@ -1,5 +1,11 @@
 package config
 
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+)
+
 type Config struct {
 	DB *DBConfig
 }
@@ -12,14 +18,19 @@ type DBConfig struct {
 	Charset  string
 }
 
-func GetConfig() *Config {
-	return &Config{
-		DB: &DBConfig{
-			Dialect:  "mysql",
-			Username: "root",
-			Password: "123",
-			Name:     "trav",
-			Charset:  "utf8",
-		},
+func GetConfig(path string) *Config {
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Printf("cant open file %v", err.Error())
+		os.Exit(100)
 	}
+	decoder := json.NewDecoder(file)
+
+	c := Config{}
+	er := decoder.Decode(&c)
+	if er != nil {
+		fmt.Printf("cant open file %v", err.Error())
+		os.Exit(100)
+	}
+	return &c
 }
