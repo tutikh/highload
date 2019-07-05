@@ -41,6 +41,10 @@ type UserVisitsArray struct {
 	Visits []UserVisits `json:"visits"`
 }
 
+type LocationAvg struct {
+	Avg float64 `json:"avg"`
+}
+
 func (User) TableName() string {
 	return "User"
 }

@@ -24,7 +24,7 @@ func CreateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	respondJSON(w, http.StatusCreated, user)
+	respondJSON(w, http.StatusOK, "")
 }
 
 func GetUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {

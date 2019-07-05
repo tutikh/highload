@@ -68,6 +68,18 @@ func UpdateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, loc)
 }
 
+func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	v := vars["id"]
+	id, err := strconv.Atoi(v)
+	if err != nil {
+		fmt.Print(err)
+	}
+	var result model.LocationAvg
+	db.Debug().Table("Visit").Select("AVG(Visit.mark) as avg").Where("Visit.location = ?", id).Scan(&result)
+	respondJSON(w, http.StatusOK, result)
+}
+
 func getLocationOr404(db *gorm.DB, id int, w http.ResponseWriter, r *http.Request) *model.Location {
 	loc := model.Location{}
 	if err := db.First(&loc, model.Location{ID: id}).Error; err != nil {

@@ -35,16 +35,17 @@ func (a *App) Initialize(config *config.Config) {
 }
 
 func (a *App) setRouters() {
-	a.Post("/users", a.CreateUser)
+	a.Post("/users/new", a.CreateUser)
 	a.Get("/users/{id}", a.GetUser)
-	a.Put("/users/{id}", a.UpdateUser)
-	a.Post("/locations", a.CreateLocation)
+	a.Post("/users/{id}", a.UpdateUser)
+	a.Post("/locations/new", a.CreateLocation)
 	a.Get("/locations/{id}", a.GetLocation)
-	a.Put("/locations/{id}", a.UpdateLocation)
-	a.Post("/visits", a.CreateVisit)
+	a.Post("/locations/{id}", a.UpdateLocation)
+	a.Post("/visits/new", a.CreateVisit)
 	a.Get("/visits/{id}", a.GetVisit)
-	a.Put("/visits/{id}", a.UpdateVisit)
+	a.Post("/visits/{id}", a.UpdateVisit)
 	a.Get("/users/{id}/visits", a.GetUserVisits)
+	a.Get("/locations/{id}/avg", a.GetAvg)
 }
 
 func (a *App) Get(path string, f func(w http.ResponseWriter, r *http.Request)) {
@@ -53,10 +54,6 @@ func (a *App) Get(path string, f func(w http.ResponseWriter, r *http.Request)) {
 
 func (a *App) Post(path string, f func(w http.ResponseWriter, r *http.Request)) {
 	a.Router.HandleFunc(path, f).Methods("POST")
-}
-
-func (a *App) Put(path string, f func(w http.ResponseWriter, r *http.Request)) {
-	a.Router.HandleFunc(path, f).Methods("PUT")
 }
 
 func (a *App) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -97,6 +94,10 @@ func (a *App) UpdateVisit(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) GetUserVisits(w http.ResponseWriter, r *http.Request) {
 	handler.GetUserVisits(a.DB, w, r)
+}
+
+func (a *App) GetAvg(w http.ResponseWriter, r *http.Request) {
+	handler.GetAvg(a.DB, w, r)
 }
 
 func (a *App) Run(host string) {
