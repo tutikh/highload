@@ -75,9 +75,32 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Print(err)
 	}
+
+	fromdate := r.FormValue("fromDate")
+	todate := r.FormValue("toDate")
+	if todate == "" {
+		todate = "9999999999"
+	}
+	todistance := r.FormValue("toDistance")
+	if todistance == "" {
+		todistance = "9999999999"
+	}
+
+	country := r.FormValue("country")
+	//	var query string
+
+	query := db.Debug().Table("Visit").Select("Visit.mark, Visit.visited_at, Location.place").Joins("right join Location on Location.id = Visit.location").
+		Where("Visit.user = ? AND Visit.visited_at > ? AND Visit.visited_at < ? AND Location.distance < ?", id, fromdate, todate, todistance)
+
+	if country != "" {
+		query = db.Debug().Table("Visit").Select("Visit.mark, Visit.visited_at, Location.place").Joins("right join Location on Location.id = Visit.location").
+			Where("Visit.user = ? AND Visit.visited_at > ? AND Visit.visited_at < ? AND Location.distance < ? AND Location.country = ?", id, fromdate, todate, todistance, country)
+	}
+
 	var result model.UserVisitsArray
-	db.Table("Visit").Select("Visit.mark, Visit.visited_at, Location.place").Joins("right join Location on Location.id = Visit.location").
-		Where("Visit.user = ?", id).Order("Visit.visited_at").Scan(&result.Visits)
+	query.
+		Where(query, id, fromdate, todate, todistance, country).
+		Order("Visit.visited_at").Scan(&result.Visits)
 	respondJSON(w, http.StatusOK, result)
 }
 
