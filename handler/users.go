@@ -87,7 +87,6 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	country := r.FormValue("country")
-	//	var query string
 
 	query := db.Debug().Table("Visit").Select("Visit.mark, Visit.visited_at, Location.place").Joins("right join Location on Location.id = Visit.location").
 		Where("Visit.user = ? AND Visit.visited_at > ? AND Visit.visited_at < ? AND Location.distance < ?", id, fromdate, todate, todistance)
@@ -98,9 +97,7 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var result model.UserVisitsArray
-	query.
-		Where(query, id, fromdate, todate, todistance, country).
-		Order("Visit.visited_at").Scan(&result.Visits)
+	query.Order("Visit.visited_at").Scan(&result.Visits)
 	respondJSON(w, http.StatusOK, result)
 }
 

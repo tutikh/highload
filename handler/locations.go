@@ -75,8 +75,29 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Print(err)
 	}
+
+	fromdate := r.FormValue("fromDate")
+	todate := r.FormValue("toDate")
+	if todate == "" {
+		todate = "9999999999"
+	}
+	fromage := r.FormValue("fromAge")
+	toage := r.FormValue("toAge")
+	if toage == "" {
+		toage = "100"
+	}
+	gender := r.FormValue("gender")
+
+	query := db.Debug().Table("Visit").Select("AVG(Visit.mark) as avg").Joins("right join User on User.id = Visit.user").
+		Where("Visit.location = ? AND Visit.visited_at > ? AND Visit.visited_at < ? AND User.age > ? AND User.age < ?", id, fromdate, todate, fromage, toage)
+
+	if gender != "" {
+		query = db.Debug().Table("Visit").Select("AVG(Visit.mark) as avg").Joins("right join User on User.id = Visit.user").
+			Where("Visit.location = ? AND Visit.visited_at > ? AND Visit.visited_at < ? AND User.age > ? AND User.age < ? AND User.gender = ?", id, fromdate, todate, fromage, toage, gender)
+	}
+
 	var result model.LocationAvg
-	db.Table("Visit").Select("AVG(Visit.mark) as avg").Where("Visit.location = ?", id).Scan(&result)
+	query.Scan(&result)
 	respondJSON(w, http.StatusOK, result)
 }
 
