@@ -24,7 +24,7 @@ func CreateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	respondJSON(w, http.StatusCreated, vis)
+	return
 }
 
 func GetVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -65,7 +65,7 @@ func UpdateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	respondJSON(w, http.StatusOK, vis)
+	return
 }
 
 func getVisitOr404(db *gorm.DB, id int, w http.ResponseWriter, r *http.Request) *model.Visit {

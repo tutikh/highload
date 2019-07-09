@@ -12,7 +12,7 @@ type User struct {
 	LastName  string `json:"last_name"`
 	Gender    string `json:"gender"`
 	BirthDate int    `json:"birth_date"`
-	Age       int    `json:"age"`
+	Age       int    `json:"-"`
 }
 
 type Location struct {

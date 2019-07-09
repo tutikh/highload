@@ -24,7 +24,7 @@ func CreateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	respondJSON(w, http.StatusOK, "")
+	return
 }
 
 func GetUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -65,7 +65,7 @@ func UpdateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	respondJSON(w, http.StatusOK, user)
+	return
 }
 
 func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
