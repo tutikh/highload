@@ -83,21 +83,50 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	if fromdate != "" {
 		query = query.Where("Visit.visited_at > ?", fromdate)
 	}
+	_, ok := r.URL.Query()["fromDate"]
+	if ok && len(fromdate) < 1 {
+		RespondError(w, http.StatusBadRequest)
+		return
+	}
+
 	todate := r.FormValue("toDate")
 	if todate != "" {
 		query = query.Where("Visit.visited_at > ?", todate)
 	}
+	_, ok = r.URL.Query()["toDate"]
+	if ok && len(todate) < 1 {
+		RespondError(w, http.StatusBadRequest)
+		return
+	}
+
 	fromage := r.FormValue("fromAge")
 	if fromage != "" {
 		query = query.Where("User.age > ?", fromage)
 	}
+	_, ok = r.URL.Query()["fromAge"]
+	if ok && len(fromage) < 1 {
+		RespondError(w, http.StatusBadRequest)
+		return
+	}
+
 	toage := r.FormValue("toAge")
 	if toage != "" {
 		query = query.Where("User.age < ?", toage)
 	}
+	_, ok = r.URL.Query()["toAge"]
+	if ok && len(toage) < 1 {
+		RespondError(w, http.StatusBadRequest)
+		return
+	}
+
 	gender := r.FormValue("gender")
 	if gender != "" {
 		query = query.Where("User.gender = ?", gender)
+	}
+	_, ok = r.URL.Query()["gender"]
+	if ok && len(gender) != 1 {
+		RespondError(w, http.StatusBadRequest)
+		return
 	}
 
 	var result model.LocationAvg

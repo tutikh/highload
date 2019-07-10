@@ -8,7 +8,6 @@ import (
 	"highload/highload/model"
 	"net/http"
 	"strconv"
-	"strings"
 	"unicode"
 )
 
@@ -88,15 +87,6 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	split := strings.Split(r.URL.RequestURI(), "?")
-	fmt.Print(split)
-	for _, value := range split {
-		if value == "fromDate=" || value == "toDate=" || value == "toDistance=" || value == "country=" {
-			RespondError(w, http.StatusBadRequest)
-			return
-		}
-	}
-
 	query := db.Debug().Table("Visit").Select("Visit.mark, Visit.visited_at, Location.place").Joins("right join Location on Location.id = Visit.location").
 		Where("Visit.user = ?", id)
 
@@ -104,21 +94,40 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	if fromdate != "" {
 		query = query.Where("Visit.visited_at > ?", fromdate)
 	}
-	if !isInt(fromdate) {
+	_, ok := r.URL.Query()["fromDate"]
+	if ok && len(fromdate) < 1 {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
+
 	todate := r.FormValue("toDate")
 	if todate != "" {
 		query = query.Where("Visit.visited_at < ?", todate)
 	}
+	_, ok = r.URL.Query()["toDate"]
+	if ok && len(todate) < 1 {
+		RespondError(w, http.StatusBadRequest)
+		return
+	}
+
 	todistance := r.FormValue("toDistance")
 	if todistance != "" {
 		query = query.Where("Location.distance < ?", todistance)
 	}
+	_, ok = r.URL.Query()["toDistance"]
+	if ok && len(todistance) < 1 {
+		RespondError(w, http.StatusBadRequest)
+		return
+	}
+
 	country := r.FormValue("country")
 	if country != "" {
 		query = query.Where("Location.country = ?", country)
+	}
+	_, ok = r.URL.Query()["country"]
+	if ok && len(country) < 1 {
+		RespondError(w, http.StatusBadRequest)
+		return
 	}
 
 	var result model.UserVisitsArray
