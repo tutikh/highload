@@ -41,16 +41,16 @@ func Custom404(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) setRouters() {
 	a.Post("/users/new", a.CreateUser)
-	a.Get("/users/{id}", a.GetUser)
-	a.Post("/users/{id}", a.UpdateUser)
+	a.Get("/users/{id:[0-9]+}", a.GetUser)
+	a.Post("/users/{id:[0-9]+}", a.UpdateUser)
 	a.Post("/locations/new", a.CreateLocation)
-	a.Get("/locations/{id}", a.GetLocation)
-	a.Post("/locations/{id}", a.UpdateLocation)
+	a.Get("/locations/{id:[0-9]+}", a.GetLocation)
+	a.Post("/locations/{id:[0-9]+}", a.UpdateLocation)
 	a.Post("/visits/new", a.CreateVisit)
-	a.Get("/visits/{id}", a.GetVisit)
-	a.Post("/visits/{id}", a.UpdateVisit)
-	a.Get("/users/{id}/visits", a.GetUserVisits)
-	a.Get("/locations/{id}/avg", a.GetAvg)
+	a.Get("/visits/{id:[0-9]+}", a.GetVisit)
+	a.Post("/visits/{id:[0-9]+}", a.UpdateVisit)
+	a.Get("/users/{id:[0-9]+}/visits", a.GetUserVisits)
+	a.Get("/locations/{id:[0-9]+}/avg", a.GetAvg)
 }
 
 func (a *App) Get(path string, f func(w http.ResponseWriter, r *http.Request)) {
