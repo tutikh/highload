@@ -8,20 +8,31 @@ import (
 	"highload/highload/model"
 	"net/http"
 	"strconv"
+	"strings"
+	"unicode"
 )
+
+func isInt(s string) bool {
+	for _, c := range s {
+		if !unicode.IsDigit(c) {
+			return false
+		}
+	}
+	return true
+}
 
 func CreateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	user := model.User{}
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&user); err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+		RespondError(w, http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
 
 	if err := db.Save(&user).Error; err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		RespondError(w, http.StatusInternalServerError)
 		return
 	}
 	return
@@ -56,13 +67,13 @@ func UpdateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&user); err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+		RespondError(w, http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
 
 	if err := db.Save(&user).Error; err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		RespondError(w, http.StatusInternalServerError)
 		return
 	}
 	return
@@ -73,27 +84,41 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	v := vars["id"]
 	id, err := strconv.Atoi(v)
 	if err != nil {
-		fmt.Print(err)
+		RespondError(w, http.StatusNotFound)
+		return
 	}
 
-	fromdate := r.FormValue("fromDate")
-	todate := r.FormValue("toDate")
-	if todate == "" {
-		todate = "9999999999"
+	split := strings.Split(r.URL.RequestURI(), "?")
+	fmt.Print(split)
+	for _, value := range split {
+		if value == "fromDate=" || value == "toDate=" || value == "toDistance=" || value == "country=" {
+			RespondError(w, http.StatusBadRequest)
+			return
+		}
 	}
-	todistance := r.FormValue("toDistance")
-	if todistance == "" {
-		todistance = "9999999999"
-	}
-
-	country := r.FormValue("country")
 
 	query := db.Debug().Table("Visit").Select("Visit.mark, Visit.visited_at, Location.place").Joins("right join Location on Location.id = Visit.location").
-		Where("Visit.user = ? AND Visit.visited_at > ? AND Visit.visited_at < ? AND Location.distance < ?", id, fromdate, todate, todistance)
+		Where("Visit.user = ?", id)
 
+	fromdate := r.FormValue("fromDate")
+	if fromdate != "" {
+		query = query.Where("Visit.visited_at > ?", fromdate)
+	}
+	if !isInt(fromdate) {
+		RespondError(w, http.StatusBadRequest)
+		return
+	}
+	todate := r.FormValue("toDate")
+	if todate != "" {
+		query = query.Where("Visit.visited_at < ?", todate)
+	}
+	todistance := r.FormValue("toDistance")
+	if todistance != "" {
+		query = query.Where("Location.distance < ?", todistance)
+	}
+	country := r.FormValue("country")
 	if country != "" {
-		query = db.Debug().Table("Visit").Select("Visit.mark, Visit.visited_at, Location.place").Joins("right join Location on Location.id = Visit.location").
-			Where("Visit.user = ? AND Visit.visited_at > ? AND Visit.visited_at < ? AND Location.distance < ? AND Location.country = ?", id, fromdate, todate, todistance, country)
+		query = query.Where("Location.country = ?", country)
 	}
 
 	var result model.UserVisitsArray
@@ -104,7 +129,7 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 func getUserOr404(db *gorm.DB, id int, w http.ResponseWriter, r *http.Request) *model.User {
 	user := model.User{}
 	if err := db.First(&user, model.User{ID: id}).Error; err != nil {
-		respondError(w, http.StatusNotFound, err.Error())
+		RespondError(w, http.StatusNotFound)
 		return nil
 	}
 	return &user

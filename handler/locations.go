@@ -15,13 +15,13 @@ func CreateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&loc); err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+		RespondError(w, http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
 
 	if err := db.Save(&loc).Error; err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		RespondError(w, http.StatusInternalServerError)
 		return
 	}
 	return
@@ -56,13 +56,13 @@ func UpdateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&loc); err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+		RespondError(w, http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
 
 	if err := db.Save(&loc).Error; err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		RespondError(w, http.StatusInternalServerError)
 		return
 	}
 	return
@@ -76,24 +76,28 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		fmt.Print(err)
 	}
 
+	query := db.Debug().Table("Visit").Select("ROUND(AVG(Visit.mark), 5) as avg").Joins("right join User on User.id = Visit.user").
+		Where("Visit.location = ?", id)
+
 	fromdate := r.FormValue("fromDate")
+	if fromdate != "" {
+		query = query.Where("Visit.visited_at > ?", fromdate)
+	}
 	todate := r.FormValue("toDate")
-	if todate == "" {
-		todate = "9999999999"
+	if todate != "" {
+		query = query.Where("Visit.visited_at > ?", todate)
 	}
 	fromage := r.FormValue("fromAge")
+	if fromage != "" {
+		query = query.Where("User.age > ?", fromage)
+	}
 	toage := r.FormValue("toAge")
-	if toage == "" {
-		toage = "100"
+	if toage != "" {
+		query = query.Where("User.age < ?", toage)
 	}
 	gender := r.FormValue("gender")
-
-	query := db.Debug().Table("Visit").Select("ROUND(AVG(Visit.mark), 5) as avg").Joins("right join User on User.id = Visit.user").
-		Where("Visit.location = ? AND Visit.visited_at > ? AND Visit.visited_at < ? AND User.age > ? AND User.age < ?", id, fromdate, todate, fromage, toage)
-
 	if gender != "" {
-		query = db.Debug().Table("Visit").Select("ROUND(AVG(Visit.mark), 5) as avg").Joins("right join User on User.id = Visit.user").
-			Where("Visit.location = ? AND Visit.visited_at > ? AND Visit.visited_at < ? AND User.age > ? AND User.age < ? AND User.gender = ?", id, fromdate, todate, fromage, toage, gender)
+		query = query.Where("User.gender = ?", gender)
 	}
 
 	var result model.LocationAvg
@@ -109,7 +113,7 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 func getLocationOr404(db *gorm.DB, id int, w http.ResponseWriter, r *http.Request) *model.Location {
 	loc := model.Location{}
 	if err := db.First(&loc, model.Location{ID: id}).Error; err != nil {
-		respondError(w, http.StatusNotFound, err.Error())
+		RespondError(w, http.StatusNotFound)
 		return nil
 	}
 	return &loc

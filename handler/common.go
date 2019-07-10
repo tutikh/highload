@@ -33,6 +33,7 @@ func respondJSONforInt(w http.ResponseWriter, status int, payload interface{}) {
 	w.Write(buffer.Bytes())
 }
 
-func respondError(w http.ResponseWriter, code int, message string) {
-	respondJSON(w, code, map[string]string{"error": message})
+func RespondError(w http.ResponseWriter, code int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
 }

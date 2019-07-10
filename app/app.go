@@ -31,7 +31,12 @@ func (a *App) Initialize(config *config.Config) {
 
 	a.DB = model.DBMigrate(db)
 	a.Router = mux.NewRouter()
+	a.Router.NotFoundHandler = http.HandlerFunc(Custom404)
 	a.setRouters()
+}
+func Custom404(w http.ResponseWriter, r *http.Request) {
+	handler.RespondError(w, http.StatusNotFound)
+	return
 }
 
 func (a *App) setRouters() {

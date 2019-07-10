@@ -15,13 +15,13 @@ func CreateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&vis); err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+		RespondError(w, http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
 
 	if err := db.Save(&vis).Error; err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		RespondError(w, http.StatusInternalServerError)
 		return
 	}
 	return
@@ -56,13 +56,13 @@ func UpdateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&vis); err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+		RespondError(w, http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
 
 	if err := db.Save(&vis).Error; err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+		RespondError(w, http.StatusInternalServerError)
 		return
 	}
 	return
@@ -71,7 +71,7 @@ func UpdateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 func getVisitOr404(db *gorm.DB, id int, w http.ResponseWriter, r *http.Request) *model.Visit {
 	vis := model.Visit{}
 	if err := db.First(&vis, model.Visit{ID: id}).Error; err != nil {
-		respondError(w, http.StatusNotFound, err.Error())
+		RespondError(w, http.StatusNotFound)
 		return nil
 	}
 	return &vis
