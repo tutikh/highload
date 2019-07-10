@@ -19,6 +19,14 @@ func isInt(s string) bool {
 	}
 	return true
 }
+func isLetter(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
+}
 
 func CreateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	user := model.User{}
@@ -95,7 +103,7 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		query = query.Where("Visit.visited_at > ?", fromdate)
 	}
 	_, ok := r.URL.Query()["fromDate"]
-	if ok && len(fromdate) < 1 {
+	if (ok && len(fromdate) < 1) || !isInt(fromdate) {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
@@ -105,7 +113,7 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		query = query.Where("Visit.visited_at < ?", todate)
 	}
 	_, ok = r.URL.Query()["toDate"]
-	if ok && len(todate) < 1 {
+	if (ok && len(todate) < 1) || !isInt(todate) {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
@@ -115,7 +123,7 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		query = query.Where("Location.distance < ?", todistance)
 	}
 	_, ok = r.URL.Query()["toDistance"]
-	if ok && len(todistance) < 1 {
+	if (ok && len(todistance) < 1) || !isInt(todistance) {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
@@ -125,7 +133,7 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		query = query.Where("Location.country = ?", country)
 	}
 	_, ok = r.URL.Query()["country"]
-	if ok && len(country) < 1 {
+	if (ok && len(country) < 1) || !isLetter(country) {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}

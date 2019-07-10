@@ -84,17 +84,17 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		query = query.Where("Visit.visited_at > ?", fromdate)
 	}
 	_, ok := r.URL.Query()["fromDate"]
-	if ok && len(fromdate) < 1 {
+	if (ok && len(fromdate) < 1) || !isInt(fromdate) {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
 
 	todate := r.FormValue("toDate")
 	if todate != "" {
-		query = query.Where("Visit.visited_at > ?", todate)
+		query = query.Where("Visit.visited_at < ?", todate)
 	}
 	_, ok = r.URL.Query()["toDate"]
-	if ok && len(todate) < 1 {
+	if (ok && len(todate) < 1) || !isInt(todate) {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
@@ -104,7 +104,7 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		query = query.Where("User.age > ?", fromage)
 	}
 	_, ok = r.URL.Query()["fromAge"]
-	if ok && len(fromage) < 1 {
+	if (ok && len(fromage) < 1) || !isInt(fromage) {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
@@ -114,7 +114,7 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		query = query.Where("User.age < ?", toage)
 	}
 	_, ok = r.URL.Query()["toAge"]
-	if ok && len(toage) < 1 {
+	if (ok && len(toage) < 1) || !isInt(toage) {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
@@ -124,7 +124,7 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		query = query.Where("User.gender = ?", gender)
 	}
 	_, ok = r.URL.Query()["gender"]
-	if ok && len(gender) != 1 {
+	if (ok && len(gender) != 1) || !isLetter(gender) {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
