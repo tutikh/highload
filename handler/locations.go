@@ -75,7 +75,11 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Print(err)
 	}
-
+	loc := model.Location{}
+	if err := db.First(&loc, model.Location{ID: id}).Error; err != nil {
+		RespondError(w, http.StatusNotFound)
+		return
+	}
 	query := db.Debug().Table("Visit").Select("ROUND(AVG(Visit.mark), 5) as avg").Joins("right join User on User.id = Visit.user").
 		Where("Visit.location = ?", id)
 

@@ -94,7 +94,11 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		RespondError(w, http.StatusNotFound)
 		return
 	}
-
+	user := model.User{}
+	if err := db.First(&user, model.User{ID: id}).Error; err != nil {
+		RespondError(w, http.StatusNotFound)
+		return
+	}
 	query := db.Debug().Table("Visit").Select("Visit.mark, Visit.visited_at, Location.place").Joins("right join Location on Location.id = Visit.location").
 		Where("Visit.user = ?", id)
 
