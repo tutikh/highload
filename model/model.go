@@ -61,3 +61,8 @@ func DBMigrate(db *gorm.DB) *gorm.DB {
 	db.AutoMigrate(&User{})
 	return db
 }
+
+func (u *User) BeforeSave() {
+	u.Age = (1544576406 - u.BirthDate) / 31536000
+	return
+}

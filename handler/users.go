@@ -109,6 +109,10 @@ func UpdateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	if result["birth_date"] != nil {
 		query.Update("birth_date", result["birth_date"])
 	}
+	if err := db.Save(&user).Error; err != nil {
+		RespondError(w, http.StatusInternalServerError)
+		return
+	}
 }
 
 func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
