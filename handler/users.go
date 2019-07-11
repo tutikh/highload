@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"highload/highload/model"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"unicode"
@@ -38,8 +39,17 @@ func CreateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if err := db.Save(&user).Error; err != nil {
-		RespondError(w, http.StatusInternalServerError)
+	if err := db.First(&user, model.User{ID: user.ID}).Error; err == nil {
+		RespondError(w, http.StatusBadRequest)
+		return
+	}
+	if user.ID != 0 && user.Email != "" && user.BirthDate != 0 && user.FirstName != "" && user.Gender != "" && user.LastName != "" {
+		if err := db.Save(&user).Error; err != nil {
+			RespondError(w, http.StatusInternalServerError)
+			return
+		}
+	} else {
+		RespondError(w, http.StatusBadRequest)
 		return
 	}
 	return
@@ -61,7 +71,6 @@ func GetUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 func UpdateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-
 	v := vars["id"]
 	id, err := strconv.Atoi(v)
 	if err != nil {
@@ -71,19 +80,35 @@ func UpdateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	if user == nil {
 		return
 	}
-
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&user); err != nil {
+	req, _ := ioutil.ReadAll(r.Body)
+	var result map[string]interface{}
+	if err := json.Unmarshal(req, &result); err != nil {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
-
-	if err := db.Save(&user).Error; err != nil {
-		RespondError(w, http.StatusInternalServerError)
-		return
+	for _, v := range result {
+		if v == nil {
+			RespondError(w, http.StatusBadRequest)
+			return
+		}
 	}
-	return
+	query := db.Model(user)
+
+	if result["first_name"] != nil {
+		query.Update("first_name", result["first_name"])
+	}
+	if result["last_name"] != nil {
+		query.Update("last_name", result["last_name"])
+	}
+	if result["email"] != nil {
+		query.Update("email", result["email"])
+	}
+	if result["gender"] != nil {
+		query.Update("gender", result["gender"])
+	}
+	if result["birth_date"] != nil {
+		query.Update("birth_date", result["birth_date"])
+	}
 }
 
 func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -137,7 +162,7 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		query = query.Where("Location.country = ?", country)
 	}
 	_, ok = r.URL.Query()["country"]
-	if (ok && len(country) < 1) || !isLetter(country) {
+	if ok && len(country) < 1 {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}

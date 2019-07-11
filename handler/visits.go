@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"highload/highload/model"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 )
@@ -20,8 +21,17 @@ func CreateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if err := db.Save(&vis).Error; err != nil {
-		RespondError(w, http.StatusInternalServerError)
+	if err := db.First(&vis, model.Visit{ID: vis.ID}).Error; err == nil {
+		RespondError(w, http.StatusBadRequest)
+		return
+	}
+	if vis.ID != 0 && vis.User != 0 && vis.Location != 0 && vis.Mark != 0 && vis.VisitedAt != 0 {
+		if err := db.Save(&vis).Error; err != nil {
+			RespondError(w, http.StatusInternalServerError)
+			return
+		}
+	} else {
+		RespondError(w, http.StatusBadRequest)
 		return
 	}
 	return
@@ -53,19 +63,33 @@ func UpdateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	if vis == nil {
 		return
 	}
+	req, _ := ioutil.ReadAll(r.Body)
 
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&vis); err != nil {
+	var result map[string]interface{}
+	if err := json.Unmarshal(req, &result); err != nil {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
-
-	if err := db.Save(&vis).Error; err != nil {
-		RespondError(w, http.StatusInternalServerError)
-		return
+	for _, v := range result {
+		if v == nil {
+			RespondError(w, http.StatusBadRequest)
+			return
+		}
 	}
-	return
+	query := db.Model(vis)
+
+	if result["location"] != nil {
+		query.Update("location", result["location"])
+	}
+	if result["user"] != nil {
+		query.Update("user", result["user"])
+	}
+	if result["visited_at"] != nil {
+		query.Update("visited_at", result["visited_at"])
+	}
+	if result["mark"] != nil {
+		query.Update("mark", result["mark"])
+	}
 }
 
 func getVisitOr404(db *gorm.DB, id int, w http.ResponseWriter, r *http.Request) *model.Visit {

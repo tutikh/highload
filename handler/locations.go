@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"highload/highload/model"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 )
@@ -20,8 +21,18 @@ func CreateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if err := db.Save(&loc).Error; err != nil {
-		RespondError(w, http.StatusInternalServerError)
+	if err := db.First(&loc, model.Location{ID: loc.ID}).Error; err == nil {
+		RespondError(w, http.StatusBadRequest)
+		return
+	}
+
+	if loc.ID != 0 && loc.City != "" && loc.Country != "" && loc.Distance != 0 && loc.Place != "" {
+		if err := db.Save(&loc).Error; err != nil {
+			RespondError(w, http.StatusInternalServerError)
+			return
+		}
+	} else {
+		RespondError(w, http.StatusBadRequest)
 		return
 	}
 	return
@@ -53,19 +64,33 @@ func UpdateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	if loc == nil {
 		return
 	}
+	req, _ := ioutil.ReadAll(r.Body)
 
-	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&loc); err != nil {
+	var result map[string]interface{}
+	if err := json.Unmarshal(req, &result); err != nil {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
-
-	if err := db.Save(&loc).Error; err != nil {
-		RespondError(w, http.StatusInternalServerError)
-		return
+	for _, v := range result {
+		if v == nil {
+			RespondError(w, http.StatusBadRequest)
+			return
+		}
 	}
-	return
+	query := db.Model(loc)
+
+	if result["distance"] != nil {
+		query.Update("distance", result["distance"])
+	}
+	if result["city"] != nil {
+		query.Update("city", result["city"])
+	}
+	if result["place"] != nil {
+		query.Update("place", result["place"])
+	}
+	if result["country"] != nil {
+		query.Update("country", result["country"])
+	}
 }
 
 func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -105,7 +130,7 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	fromage := r.FormValue("fromAge")
 	if fromage != "" {
-		query = query.Where("User.age > ?", fromage)
+		query = query.Where("User.age >= ?", fromage)
 	}
 	_, ok = r.URL.Query()["fromAge"]
 	if (ok && len(fromage) < 1) || !isInt(fromage) {
