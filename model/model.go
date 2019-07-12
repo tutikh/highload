@@ -15,6 +15,10 @@ type User struct {
 	Age       int    `json:"-"`
 }
 
+type Users struct {
+	Users []User `json: "users"`
+}
+
 type Location struct {
 	ID       int    `gorm:"unique" json:"id"`
 	Distance int    `json:"distance"`
@@ -23,12 +27,20 @@ type Location struct {
 	Country  string `json:"country"`
 }
 
+type Locations struct {
+	Locations []Location `json: "locations"`
+}
+
 type Visit struct {
 	ID        int `gorm:"unique" json:"id"`
 	Location  int `json:"location"`
 	User      int `json:"user"`
 	VisitedAt int `json:"visited_at"`
 	Mark      int `json:"mark"`
+}
+
+type Visits struct {
+	Visits []Visit `json: "visits"`
 }
 
 type UserVisits struct {
