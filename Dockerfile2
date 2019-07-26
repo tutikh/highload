@@ -1,0 +1,16 @@
+FROM mysql:5.7
+USER root
+COPY docker-entrypoint.sh /usr/local/bin/
+COPY hl /home/hl
+COPY highload /usr/bin/dumb
+
+RUN apt-get update
+RUN apt-get install unzip -y
+
+RUN unzip /home/hl/load/data/data.zip -d /home/hl/load/data
+
+ENV MYSQL_ROOT_PASSWORD=123 MYSQL_DATABASE=trav
+
+EXPOSE 80
+
+CMD ["mysqld"]

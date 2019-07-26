@@ -1,0 +1,34 @@
+package hl
+
+import (
+	"fmt"
+	"highload/hl/app"
+	"highload/hl/config"
+	"highload/hl/load"
+	"os/exec"
+)
+
+
+func main() {
+
+	_, err := exec.Command("sh","-c", "unzip /tmp/data/data.zip -d /root/go/src/highload/hl/load/data").Output()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	config := config.GetConfig("/root/go/src/highload/hl/config/Config.json")
+
+	app := &app.App{}
+	app.Initialize(config)
+
+	fmt.Println("WORKING!!!")
+
+	//runtime.GOMAXPROCS(runtime.NumCPU())
+
+	load.LoadUser(app.DB, config.DataPath)
+	load.LoadLocation(app.DB, config.DataPath)
+	load.LoadVisit(app.DB, config.DataPath)
+
+	app.Run(":80")
+}
+
