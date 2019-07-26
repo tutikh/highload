@@ -5,40 +5,45 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-	"highload/highload/model"
+	"highload/hl/model"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 )
 
 func CreateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	//mu := &sync.Mutex{}
+	//mu.Lock()
+	//defer mu.Unlock()
+	db.Exec("PRAGMA journal_mode=WAL;")
+	db.Exec("pragma busy_timeout=5000;")
+	//db.Exec("PRAGMA synchronous=normal;")
+	//db.Exec("PRAGMA locking_mode=EXCLUSIVE;")
 	loc := model.Location{}
-
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&loc); err != nil {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
 
+	defer r.Body.Close()
 	if err := db.First(&loc, model.Location{ID: loc.ID}).Error; err == nil {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
-
 	if loc.ID != 0 && loc.City != "" && loc.Country != "" && loc.Distance != 0 && loc.Place != "" {
-		if err := db.Save(&loc).Error; err != nil {
-			RespondError(w, http.StatusInternalServerError)
-			return
-		}
+		db.Save(&loc)
 	} else {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
-	return
+	RespondJSON2(w, http.StatusOK)
 }
 
 func GetLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	//db.Exec("pragma busy_timeout=30000;")
+	//db.Exec("PRAGMA journal_mode=DELETE;")
+	//db.Exec("PRAGMA locking_mode=normal;")
 	vars := mux.Vars(r)
 	v := vars["id"]
 	id, err := strconv.Atoi(v)
@@ -53,6 +58,13 @@ func GetLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	//mu := &sync.Mutex{}
+	//mu.Lock()
+	//defer mu.Unlock()
+	db.Exec("PRAGMA journal_mode=WAL;")
+	db.Exec("pragma busy_timeout=5000;")
+	//db.Exec("PRAGMA synchronous=normal;")
+	//db.Exec("PRAGMA locking_mode=EXCLUSIVE;")
 	vars := mux.Vars(r)
 
 	v := vars["id"]
@@ -78,22 +90,28 @@ func UpdateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	query := db.Model(loc)
+	query.Updates(result)
 
-	if result["distance"] != nil {
-		query.Update("distance", result["distance"])
-	}
-	if result["city"] != nil {
-		query.Update("city", result["city"])
-	}
-	if result["place"] != nil {
-		query.Update("place", result["place"])
-	}
-	if result["country"] != nil {
-		query.Update("country", result["country"])
-	}
+	//if result["distance"] != nil {
+	//	query.Update("distance", result["distance"])
+	//}
+	//if result["city"] != nil {
+	//	query.Update("city", result["city"])
+	//}
+	//if result["place"] != nil {
+	//	query.Update("place", result["place"])
+	//}
+	//if result["country"] != nil {
+	//	query.Update("country", result["country"])
+	//}
+	RespondJSON2(w, http.StatusOK)
 }
 
 func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	//db.Exec("pragma busy_timeout=30000;")
+	//
+	//db.Exec("PRAGMA journal_mode=DELETE;")
+	//db.Exec("PRAGMA locking_mode=normal;")
 	vars := mux.Vars(r)
 	v := vars["id"]
 	id, err := strconv.Atoi(v)
@@ -105,7 +123,7 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		RespondError(w, http.StatusNotFound)
 		return
 	}
-	query := db.Debug().Table("Visit").Select("ROUND(AVG(Visit.mark), 5) as avg").Joins("right join User on User.id = Visit.user").
+	query := db.Table("Visit").Select("ROUND(AVG(Visit.mark), 5) as avg").Joins("inner join User on User.id = Visit.user").
 		Where("Visit.location = ?", id)
 
 	fromdate := r.FormValue("fromDate")

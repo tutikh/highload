@@ -12,11 +12,13 @@ type Config struct {
 }
 
 type DBConfig struct {
-	Dialect  string
-	Username string
-	Password string
-	Name     string
-	Charset  string
+	Dialect string
+	//Username string
+	//Password string
+	//Name     string
+	//Charset  string
+	//Port int
+	//Host string
 }
 
 func GetConfig(path string) *Config {

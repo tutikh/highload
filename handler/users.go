@@ -5,12 +5,22 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-	"highload/highload/model"
+	"highload/hl/model"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"unicode"
 )
+
+var UpdateChan chan func()
+
+func Upd() {
+	for job := range UpdateChan {
+		//fmt.Println("start")
+		job()
+		//fmt.Println("finish")
+	}
+}
 
 func isInt(s string) bool {
 	for _, c := range s {
@@ -30,6 +40,14 @@ func isLetter(s string) bool {
 }
 
 func CreateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	////mu := &sync.Mutex{}
+	//mu.Lock()
+	//defer mu.Unlock()
+	//
+	db.Exec("PRAGMA journal_mode=WAL;")
+	db.Exec("pragma busy_timeout=5000;")
+	//db.Exec("PRAGMA synchronous=normal;")
+	//db.Exec("PRAGMA locking_mode=EXCLUSIVE;")
 	user := model.User{}
 
 	decoder := json.NewDecoder(r.Body)
@@ -37,25 +55,25 @@ func CreateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
 
+	defer r.Body.Close()
 	if err := db.First(&user, model.User{ID: user.ID}).Error; err == nil {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
 	if user.ID != 0 && user.Email != "" && user.BirthDate != 0 && user.FirstName != "" && user.Gender != "" && user.LastName != "" {
-		if err := db.Save(&user).Error; err != nil {
-			RespondError(w, http.StatusInternalServerError)
-			return
-		}
+		db.Save(&user)
 	} else {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
-	return
+	RespondJSON2(w, http.StatusOK)
 }
 
 func GetUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	//db.Exec("pragma busy_timeout=30000;")
+	//db.Exec("PRAGMA journal_mode=DELETE;")
+	//db.Exec("PRAGMA locking_mode=normal;")
 	vars := mux.Vars(r)
 	v := vars["id"]
 	id, err := strconv.Atoi(v)
@@ -70,6 +88,12 @@ func GetUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	//mu := &sync.Mutex{}
+	//mu.Lock()
+	//defer mu.Unlock()
+	db.Exec("PRAGMA journal_mode=WAL;")
+	db.Exec("pragma busy_timeout=5000;")
+	//db.Exec("PRAGMA synchronous=normal;")
 	vars := mux.Vars(r)
 	v := vars["id"]
 	id, err := strconv.Atoi(v)
@@ -93,29 +117,32 @@ func UpdateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	query := db.Model(user)
+	query.Updates(result)
 
-	if result["first_name"] != nil {
-		query.Update("first_name", result["first_name"])
-	}
-	if result["last_name"] != nil {
-		query.Update("last_name", result["last_name"])
-	}
-	if result["email"] != nil {
-		query.Update("email", result["email"])
-	}
-	if result["gender"] != nil {
-		query.Update("gender", result["gender"])
-	}
-	if result["birth_date"] != nil {
-		query.Update("birth_date", result["birth_date"])
-	}
-	if err := db.Save(&user).Error; err != nil {
-		RespondError(w, http.StatusInternalServerError)
-		return
-	}
+	//query.Updates(result)
+
+	//if result["first_name"] != nil {
+	//	query.Update("first_name", result["first_name"])
+	//}
+	//if result["last_name"] != nil {
+	//	query.Update("last_name", result["last_name"])
+	//}
+	//if result["email"] != nil {
+	//	query.Update("email", result["email"])
+	//}
+	//if result["gender"] != nil {
+	//	query.Update("gender", result["gender"])
+	//}
+	//if result["birth_date"] != nil {
+	//	query.Update("birth_date", result["birth_date"])
+	//}
+	RespondJSON2(w, http.StatusOK)
 }
 
 func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	//db.Exec("pragma busy_timeout=30000;")
+	//db.Exec("PRAGMA journal_mode=DELETE;")
+	//db.Exec("PRAGMA locking_mode=normal;")
 	vars := mux.Vars(r)
 	v := vars["id"]
 	id, err := strconv.Atoi(v)
@@ -128,7 +155,7 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		RespondError(w, http.StatusNotFound)
 		return
 	}
-	query := db.Debug().Table("Visit").Select("Visit.mark, Visit.visited_at, Location.place").Joins("right join Location on Location.id = Visit.location").
+	query := db.Table("Visit").Select("Visit.mark, Visit.visited_at, Location.place").Joins("inner join Location on Location.id = Visit.location").
 		Where("Visit.user = ?", id)
 
 	fromdate := r.FormValue("fromDate")

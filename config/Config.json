@@ -1,10 +1,6 @@
 {
   "DB": {
-    "Dialect": "mysql",
-    "Username": "root",
-    "Password": "123",
-    "Name": "trav",
-    "Charset": "utf8"
+    "Dialect": "sqlite3"
   },
-  "DataPath": "highload/load/data"
+  "DataPath": "/root/go/src/highload/hl/load/data"
 }

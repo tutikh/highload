@@ -1,15 +1,14 @@
 package app
 
 import (
-	"fmt"
-	"log"
-	"net/http"
-
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-	"highload/highload/config"
-	"highload/highload/handler"
-	"highload/highload/model"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"highload/hl/config"
+	"highload/hl/handler"
+	"highload/hl/model"
+	"log"
+	"net/http"
 )
 
 type App struct {
@@ -18,22 +17,42 @@ type App struct {
 }
 
 func (a *App) Initialize(config *config.Config) {
-	dbURI := fmt.Sprintf("%s:%s@/%s?charset=%s&parseTime=True",
-		config.DB.Username,
-		config.DB.Password,
-		config.DB.Name,
-		config.DB.Charset)
+	//dbURI := fmt.Sprintf("%s:%s@(%s:%d)/%s?charset=%s&parseTime=True",
+	//	config.DB.Username,
+	//	config.DB.Password,
+	//	config.DB.Host,
+	//	config.DB.Port,
+	//	config.DB.Name,
+	//	config.DB.Charset)
 
-	db, err := gorm.Open(config.DB.Dialect, dbURI)
+	var db *gorm.DB
+	var err error
+
+	db, err = gorm.Open(config.DB.Dialect, "/root/go/src/highload/hl/load/trav.db?cache=shared")
 	if err != nil {
 		log.Fatal("Could not connect database")
 	}
+	//db.DB().SetMaxOpenConns(1)
+	//for {
+	//	db, err = gorm.Open(config.DB.Dialect, "trav.db")
+	//	if err != nil {
+	//		log.Printf("Could not connect database")
+	//		time.Sleep(10 * time.Second)
+	//		continue
+	//	} else {
+	//		break
+	//	}
+	//}
 
 	a.DB = model.DBMigrate(db)
 	a.Router = mux.NewRouter()
 	a.Router.NotFoundHandler = http.HandlerFunc(Custom404)
 	a.setRouters()
+
+	handler.UpdateChan = make(chan func(), 100)
+	go handler.Upd()
 }
+
 func Custom404(w http.ResponseWriter, r *http.Request) {
 	handler.RespondError(w, http.StatusNotFound)
 	return
@@ -62,7 +81,9 @@ func (a *App) Post(path string, f func(w http.ResponseWriter, r *http.Request)) 
 }
 
 func (a *App) CreateUser(w http.ResponseWriter, r *http.Request) {
-	handler.CreateUser(a.DB, w, r)
+	handler.UpdateChan <- func() {
+		handler.CreateUser(a.DB, w, r)
+	}
 }
 
 func (a *App) GetUser(w http.ResponseWriter, r *http.Request) {
@@ -70,11 +91,15 @@ func (a *App) GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	handler.UpdateUser(a.DB, w, r)
+	handler.UpdateChan <- func() {
+		handler.UpdateUser(a.DB, w, r)
+	}
 }
 
 func (a *App) CreateLocation(w http.ResponseWriter, r *http.Request) {
-	handler.CreateLocation(a.DB, w, r)
+	handler.UpdateChan <- func() {
+		handler.CreateLocation(a.DB, w, r)
+	}
 }
 
 func (a *App) GetLocation(w http.ResponseWriter, r *http.Request) {
@@ -82,11 +107,15 @@ func (a *App) GetLocation(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateLocation(w http.ResponseWriter, r *http.Request) {
-	handler.UpdateLocation(a.DB, w, r)
+	handler.UpdateChan <- func() {
+		handler.UpdateLocation(a.DB, w, r)
+	}
 }
 
 func (a *App) CreateVisit(w http.ResponseWriter, r *http.Request) {
-	handler.CreateVisit(a.DB, w, r)
+	handler.UpdateChan <- func() {
+		handler.CreateVisit(a.DB, w, r)
+	}
 }
 
 func (a *App) GetVisit(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +123,9 @@ func (a *App) GetVisit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) UpdateVisit(w http.ResponseWriter, r *http.Request) {
-	handler.UpdateVisit(a.DB, w, r)
+	handler.UpdateChan <- func() {
+		handler.UpdateVisit(a.DB, w, r)
+	}
 }
 
 func (a *App) GetUserVisits(w http.ResponseWriter, r *http.Request) {

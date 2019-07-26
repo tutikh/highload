@@ -5,13 +5,21 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-	"highload/highload/model"
+	"highload/hl/model"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 )
 
+//var mu = &sync.Mutex{}
 func CreateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	//mu := &sync.Mutex{}
+	//mu.Lock()
+	//defer mu.Unlock()
+	db.Exec("PRAGMA journal_mode=WAL;")
+	db.Exec("pragma busy_timeout=5000;")
+	//db.Exec("PRAGMA synchronous=normal;")
+	//db.Exec("PRAGMA locking_mode=normal;")
 	vis := model.Visit{}
 
 	decoder := json.NewDecoder(r.Body)
@@ -26,18 +34,20 @@ func CreateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if vis.ID != 0 && vis.User != 0 && vis.Location != 0 && vis.Mark != 0 && vis.VisitedAt != 0 {
-		if err := db.Save(&vis).Error; err != nil {
-			RespondError(w, http.StatusInternalServerError)
-			return
+		UpdateChan <- func() {
+			db.Save(&vis)
 		}
 	} else {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
-	return
+	RespondJSON2(w, http.StatusOK)
 }
 
 func GetVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	//db.Exec("pragma busy_timeout=30000;")
+	//db.Exec("PRAGMA journal_mode=DELETE;")
+	//db.Exec("PRAGMA locking_mode=normal;")
 	vars := mux.Vars(r)
 	v := vars["id"]
 	id, err := strconv.Atoi(v)
@@ -52,6 +62,13 @@ func GetVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	//mu := &sync.Mutex{}
+	//mu.Lock()
+	//defer mu.Unlock()
+	db.Exec("PRAGMA journal_mode=WAL;")
+	db.Exec("pragma busy_timeout=5000;")
+	//db.Exec("PRAGMA synchronous=normal;")
+	//db.Exec("PRAGMA locking_mode=normal;")
 	vars := mux.Vars(r)
 
 	v := vars["id"]
@@ -63,6 +80,7 @@ func UpdateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	if vis == nil {
 		return
 	}
+
 	req, _ := ioutil.ReadAll(r.Body)
 
 	var result map[string]interface{}
@@ -77,19 +95,21 @@ func UpdateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	query := db.Model(vis)
+	query.Updates(result)
 
-	if result["location"] != nil {
-		query.Update("location", result["location"])
-	}
-	if result["user"] != nil {
-		query.Update("user", result["user"])
-	}
-	if result["visited_at"] != nil {
-		query.Update("visited_at", result["visited_at"])
-	}
-	if result["mark"] != nil {
-		query.Update("mark", result["mark"])
-	}
+	//if result["location"] != nil {
+	//	query.Update("location", result["location"])
+	//}
+	//if result["user"] != nil {
+	//	query.Update("user", result["user"])
+	//}
+	//if result["visited_at"] != nil {
+	//	query.Update("visited_at", result["visited_at"])
+	//}
+	//if result["mark"] != nil {
+	//	query.Update("mark", result["mark"])
+	//}
+	RespondJSON2(w, http.StatusOK)
 }
 
 func getVisitOr404(db *gorm.DB, id int, w http.ResponseWriter, r *http.Request) *model.Visit {

@@ -1,8 +1,12 @@
 package model
 
 import (
+	"bufio"
+	"fmt"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"os"
+	"strconv"
 )
 
 type User struct {
@@ -16,7 +20,7 @@ type User struct {
 }
 
 type Users struct {
-	Users []User `json: "users"`
+	Users []User `json:"users"`
 }
 
 type Location struct {
@@ -28,7 +32,7 @@ type Location struct {
 }
 
 type Locations struct {
-	Locations []Location `json: "locations"`
+	Locations []Location `json:"locations"`
 }
 
 type Visit struct {
@@ -40,7 +44,7 @@ type Visit struct {
 }
 
 type Visits struct {
-	Visits []Visit `json: "visits"`
+	Visits []Visit `json:"visits"`
 }
 
 type UserVisits struct {
@@ -70,11 +74,32 @@ func (Visit) TableName() string {
 }
 
 func DBMigrate(db *gorm.DB) *gorm.DB {
-	db.AutoMigrate(&User{})
+	db.AutoMigrate(&User{}, &Location{}, &Visit{})
 	return db
 }
 
+func GetDate() int {
+	var d int
+
+	f, err := os.Open("/tmp/data/options.txt")
+	if err != nil {
+		fmt.Printf("cant open file %v", err.Error())
+		os.Exit(100)
+	}
+	defer f.Close()
+	scanner := bufio.NewScanner(f)
+	if scanner.Scan() {
+		d, err = strconv.Atoi(scanner.Text())
+		if err != nil {
+			fmt.Printf("%v", err.Error())
+		}
+		return d
+	}
+	return d
+}
+
 func (u *User) BeforeSave() {
-	u.Age = (1544576406 - u.BirthDate) / 31536000
+	d := GetDate()
+	u.Age = (d - u.BirthDate) / 31536000
 	return
 }

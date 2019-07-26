@@ -15,8 +15,15 @@ func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Transfer-Encoding", "identity")
 	w.WriteHeader(status)
-	w.Write([]byte(response))
+	w.Write(response)
+}
+
+func RespondJSON2(w http.ResponseWriter, status int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	w.Write([]byte("{}"))
 }
 
 func respondJSONforInt(w http.ResponseWriter, status int, payload interface{}) {

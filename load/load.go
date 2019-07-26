@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/gorm"
-	"highload/highload/model"
+	"highload/hl/model"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -20,6 +20,7 @@ func Exists(name string) bool {
 }
 
 func LoadUser(db *gorm.DB, dir string) {
+	db.Delete(&model.User{})
 	n := 1
 	path := dir + "/users_" + strconv.Itoa(n) + ".json"
 
@@ -36,9 +37,12 @@ func LoadUser(db *gorm.DB, dir string) {
 			fmt.Printf("cant unmarshal %v", err.Error())
 			os.Exit(100)
 		}
+
+		d := model.GetDate()
+
 		sql := "INSERT INTO User (id, email, first_name, last_name, gender, birth_date, age) VALUES "
 		for _, v := range users.Users {
-			row := fmt.Sprintf("(%d, '%s', '%s', '%s', '%s', %d, %d), ", v.ID, v.Email, v.FirstName, v.LastName, v.Gender, v.BirthDate, (1544576406-v.BirthDate)/31536000)
+			row := fmt.Sprintf("(%d, '%s', '%s', '%s', '%s', %d, %d), ", v.ID, v.Email, v.FirstName, v.LastName, v.Gender, v.BirthDate, (d-v.BirthDate)/31536000)
 			sql = sql + row
 		}
 		sql = sql[:len(sql)-2]
@@ -50,6 +54,7 @@ func LoadUser(db *gorm.DB, dir string) {
 }
 
 func LoadLocation(db *gorm.DB, dir string) {
+	db.Delete(&model.Location{})
 	n := 1
 	path := dir + "/locations_" + strconv.Itoa(n) + ".json"
 
@@ -80,6 +85,7 @@ func LoadLocation(db *gorm.DB, dir string) {
 }
 
 func LoadVisit(db *gorm.DB, dir string) {
+	db.Delete(&model.Visit{})
 	n := 1
 	path := dir + "/visits_" + strconv.Itoa(n) + ".json"
 
