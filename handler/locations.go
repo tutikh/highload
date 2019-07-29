@@ -138,6 +138,8 @@ func UpdateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	mu.Lock()
+	defer mu.Unlock()
 	//db.Exec("pragma busy_timeout=30000;")
 	//
 	//db.Exec("PRAGMA journal_mode=DELETE;")

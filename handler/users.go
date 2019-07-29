@@ -121,17 +121,13 @@ func UpdateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	query := db.Model(user)
 	mu.Lock()
 	defer mu.Unlock()
-	for {
-		err := query.Updates(result).Error
-		if err == sqlite3.ErrLocked {
-			fmt.Println("trying...")
-			continue
-		} else {
-			break
-		}
+
+	if err := json.Unmarshal(req, &user); err != nil {
+		//fmt.Println("Unmarshaling problem")
+		RespondError(w, http.StatusBadRequest)
+		return
 	}
 	db.Save(&user)
 	//query.Updates(result)
@@ -156,6 +152,8 @@ func UpdateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	mu.Lock()
+	defer mu.Unlock()
 	//db.Exec("pragma busy_timeout=30000;")
 	//db.Exec("PRAGMA journal_mode=DELETE;")
 	//db.Exec("PRAGMA locking_mode=normal;")

@@ -28,12 +28,11 @@ func (a *App) Initialize(config *config.Config) {
 	var db *gorm.DB
 	var err error
 
-	db, err = gorm.Open(config.DB.Dialect, "/root/go/src/hl/load/trav.db?pooling=true")
+	db, err = gorm.Open(config.DB.Dialect, "/root/go/src/hl/load/trav.db?cache=shared&_mutex=no&_journal_mode=WAL&_busy_timeout=5000")
 	if err != nil {
 		log.Fatal("Could not connect database")
 	}
-	db.Exec("PRAGMA journal_mode=WAL;")
-	//db.DB().SetMaxOpenConns(1)
+	db.DB().SetMaxOpenConns(1)
 	//for {
 	//	db, err = gorm.Open(config.DB.Dialect, "trav.db")
 	//	if err != nil {

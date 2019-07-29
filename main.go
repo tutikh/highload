@@ -15,6 +15,7 @@ func main() {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+
 	config := config.GetConfig("/root/go/src/hl/config/Config2.json")
 
 	app := &app.App{}
