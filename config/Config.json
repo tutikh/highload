@@ -2,5 +2,9 @@
   "DB": {
     "Dialect": "sqlite3"
   },
-  "DataPath": "/root/go/src/highload/hl/load/data"
+  "DataPath": "load/data",
+  "PathDB": "trav.db?cache=shared",
+  "Unzipfrom": "load/data/data.zip",
+  "Unzipto": "load/data",
+  "Dataoptions": "load/data/options.txt"
 }

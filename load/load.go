@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/gorm"
-	"highload/hl/model"
+	"hl/model"
 	"io/ioutil"
 	"os"
 	"strconv"

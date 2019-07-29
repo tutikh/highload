@@ -1,0 +1,10 @@
+{
+  "DB": {
+    "Dialect": "sqlite3"
+  },
+  "DataPath": "/root/go/src/hl/load/data",
+  "PathDB": "/root/go/src/hl/load/trav.db?cache=shared",
+  "Unzipfrom": "/tmp/data/data.zip",
+  "Unzipto": "/root/go/src/hl/load/data",
+  "Dataoptions": "/tmp/data/options.txt"
+}

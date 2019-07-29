@@ -20,11 +20,11 @@ ENV PATH=${PATH}:/usr/local/go/bin GOROOT=/usr/local/go GOPATH=/root/go
 # Копируем наш исходный main.go внутрь контейнера, в папку go/src/dumb
 ADD load/data /tmp/data/
 RUN ls /tmp/data/
-ADD trav.db go/src/highload/hl/load/
-ADD .. /  go/src/highload/
-ADD ../src /root/go/src/
+ADD trav.db go/src/hl/load/
+ADD . /  go/src/hl/
+ADD ./src /root/go/src/
 
-WORKDIR /root/go/src/highload/
+WORKDIR /root/go/src/hl/
 
 # Компилируем и устанавливаем наш сервер
 RUN go get
@@ -37,4 +37,4 @@ RUN go build
 EXPOSE 80
 
 
-CMD ./highload
+CMD ./hl

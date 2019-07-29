@@ -5,22 +5,13 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-	"highload/hl/model"
+	"github.com/mattn/go-sqlite3"
+	"hl/model"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"unicode"
 )
-
-var UpdateChan chan func()
-
-func Upd() {
-	for job := range UpdateChan {
-		//fmt.Println("start")
-		job()
-		//fmt.Println("finish")
-	}
-}
 
 func isInt(s string) bool {
 	for _, c := range s {
@@ -41,33 +32,45 @@ func isLetter(s string) bool {
 
 func CreateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	////mu := &sync.Mutex{}
-	//mu.Lock()
-	//defer mu.Unlock()
 	//
-	db.Exec("PRAGMA journal_mode=WAL;")
-	db.Exec("pragma busy_timeout=5000;")
+	//db.Exec("PRAGMA journal_mode=WAL;")
+	//db.Exec("pragma busy_timeout=5000;")
 	//db.Exec("PRAGMA synchronous=normal;")
 	//db.Exec("PRAGMA locking_mode=EXCLUSIVE;")
+
 	user := model.User{}
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&user); err != nil {
+		//fmt.Println("Decoding problem")
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
 
 	defer r.Body.Close()
-	if err := db.First(&user, model.User{ID: user.ID}).Error; err == nil {
+	//if err := db.First(&user, model.User{ID: user.ID}).Error; err == nil {
+	//	fmt.Println("User is exist: ", &user)
+	//	RespondError(w, http.StatusBadRequest)
+	//	return
+	//}
+	if user.ID == 0 || user.Email == "" || user.BirthDate == 0 || user.FirstName == "" || user.Gender == "" || user.LastName == "" {
+		//fmt.Println("Bad request")
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
-	if user.ID != 0 && user.Email != "" && user.BirthDate != 0 && user.FirstName != "" && user.Gender != "" && user.LastName != "" {
-		db.Save(&user)
-	} else {
-		RespondError(w, http.StatusBadRequest)
-		return
+	mu.Lock()
+	defer mu.Unlock()
+	for {
+		err := db.Save(&user).Error
+		if err == sqlite3.ErrLocked {
+			fmt.Println("trying...")
+			continue
+		} else {
+			break
+		}
 	}
 	RespondJSON2(w, http.StatusOK)
+	return
 }
 
 func GetUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -89,10 +92,9 @@ func GetUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 func UpdateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	//mu := &sync.Mutex{}
-	//mu.Lock()
-	//defer mu.Unlock()
-	db.Exec("PRAGMA journal_mode=WAL;")
-	db.Exec("pragma busy_timeout=5000;")
+
+	//db.Exec("PRAGMA journal_mode=WAL;")
+	//db.Exec("pragma busy_timeout=5000;")
 	//db.Exec("PRAGMA synchronous=normal;")
 	vars := mux.Vars(r)
 	v := vars["id"]
@@ -102,23 +104,36 @@ func UpdateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 	user := getUserOr404(db, id, w, r)
 	if user == nil {
+		//fmt.Println("User not found")
 		return
 	}
 	req, _ := ioutil.ReadAll(r.Body)
 	var result map[string]interface{}
 	if err := json.Unmarshal(req, &result); err != nil {
+		//fmt.Println("Unmarshaling problem")
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
 	for _, v := range result {
 		if v == nil {
+			//fmt.Println("problem")
 			RespondError(w, http.StatusBadRequest)
 			return
 		}
 	}
 	query := db.Model(user)
-	query.Updates(result)
-
+	mu.Lock()
+	defer mu.Unlock()
+	for {
+		err := query.Updates(result).Error
+		if err == sqlite3.ErrLocked {
+			fmt.Println("trying...")
+			continue
+		} else {
+			break
+		}
+	}
+	db.Save(&user)
 	//query.Updates(result)
 
 	//if result["first_name"] != nil {
@@ -137,6 +152,7 @@ func UpdateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	//	query.Update("birth_date", result["birth_date"])
 	//}
 	RespondJSON2(w, http.StatusOK)
+	return
 }
 
 func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {

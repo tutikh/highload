@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"hl/config"
 	"os"
 	"strconv"
 )
@@ -81,7 +82,8 @@ func DBMigrate(db *gorm.DB) *gorm.DB {
 func GetDate() int {
 	var d int
 
-	f, err := os.Open("/tmp/data/options.txt")
+	config := config.GetConfig("/root/go/src/hl/config/Config2.json")
+	f, err := os.Open(config.Dataoptions)
 	if err != nil {
 		fmt.Printf("cant open file %v", err.Error())
 		os.Exit(100)

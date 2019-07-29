@@ -7,8 +7,12 @@ import (
 )
 
 type Config struct {
-	DB       *DBConfig
-	DataPath string
+	DB          *DBConfig
+	DataPath    string
+	PathDB      string
+	Unzipfrom   string
+	Unzipto     string
+	Dataoptions string
 }
 
 type DBConfig struct {

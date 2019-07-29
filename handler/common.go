@@ -21,6 +21,7 @@ func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
 }
 
 func RespondJSON2(w http.ResponseWriter, status int) {
+	//fmt.Println("SAved!!!")
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	w.Write([]byte("{}"))
