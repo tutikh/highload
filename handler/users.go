@@ -220,6 +220,8 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 func getUserOr404(db *gorm.DB, id int, w http.ResponseWriter, r *http.Request) *model.User {
+	mu.Lock()
+	defer mu.Unlock()
 	user := model.User{}
 	if err := db.First(&user, model.User{ID: id}).Error; err != nil {
 		RespondError(w, http.StatusNotFound)

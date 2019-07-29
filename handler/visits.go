@@ -137,6 +137,8 @@ func UpdateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 func getVisitOr404(db *gorm.DB, id int, w http.ResponseWriter, r *http.Request) *model.Visit {
+	mu.Lock()
+	defer mu.Unlock()
 	vis := model.Visit{}
 	if err := db.First(&vis, model.Visit{ID: id}).Error; err != nil {
 		RespondError(w, http.StatusNotFound)

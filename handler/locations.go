@@ -217,6 +217,8 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 func getLocationOr404(db *gorm.DB, id int, w http.ResponseWriter, r *http.Request) *model.Location {
+	mu.Lock()
+	defer mu.Unlock()
 	loc := model.Location{}
 	if err := db.First(&loc, model.Location{ID: id}).Error; err != nil {
 		RespondError(w, http.StatusNotFound)

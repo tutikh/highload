@@ -32,6 +32,7 @@ func (a *App) Initialize(config *config.Config) {
 	if err != nil {
 		log.Fatal("Could not connect database")
 	}
+	db.Exec("PRAGMA journal_mode=WAL;")
 	//db.DB().SetMaxOpenConns(1)
 	//for {
 	//	db, err = gorm.Open(config.DB.Dialect, "trav.db")
