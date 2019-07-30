@@ -19,6 +19,7 @@ func main() {
 	config := config.GetConfig("/root/go/src/hl/config/Config2.json")
 
 	app := &app.App{}
+
 	app.Initialize(config)
 
 	fmt.Println("WORKING!!!")

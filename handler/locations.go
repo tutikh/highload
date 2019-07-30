@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-	"github.com/mattn/go-sqlite3"
 	"hl/model"
 	"io/ioutil"
 	"net/http"
@@ -22,7 +21,7 @@ func CreateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	loc := model.Location{}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&loc); err != nil {
-		//fmt.Println("Decoding problem")
+		//fmt.Println("Decoding problem(loc)")
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
@@ -42,24 +41,20 @@ func CreateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
-	mu.Lock()
-	defer mu.Unlock()
-	for {
-		err := db.Save(&loc).Error
-		if err == sqlite3.ErrLocked {
-			fmt.Println("trying...")
-			continue
-		} else {
-			break
-		}
+	//mu.Lock()
+	//defer mu.Unlock()
+	err := db.Save(&loc).Error
+	if err != nil {
+		fmt.Println("loc not saved")
 	}
 	RespondJSON2(w, http.StatusOK)
+	//fmt.Println("loc saved")
 	return
 }
 
 func GetLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	//db.Exec("pragma busy_timeout=30000;")
-	//db.Exec("PRAGMA journal_mode=DELETE;")
+	//db.Exec("PRAGMA journal_mode=OFF;")
 	//db.Exec("PRAGMA locking_mode=normal;")
 	vars := mux.Vars(r)
 	v := vars["id"]
@@ -69,6 +64,7 @@ func GetLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 	loc := getLocationOr404(db, id, w, r)
 	if loc == nil {
+		fmt.Println("loc not found(67)")
 		return
 	}
 	respondJSON(w, http.StatusOK, loc)
@@ -90,14 +86,14 @@ func UpdateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 	loc := getLocationOr404(db, id, w, r)
 	if loc == nil {
-		//fmt.Println("Loaction not found")
+		//fmt.Println("Loaction not found(89)")
 		return
 	}
 	req, _ := ioutil.ReadAll(r.Body)
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(req, &result); err != nil {
-		//fmt.Println("Unmarshaling problem")
+		//fmt.Println("Unmarshaling problem(loc)")
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
@@ -109,16 +105,11 @@ func UpdateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	query := db.Model(loc)
-	mu.Lock()
-	defer mu.Unlock()
-	for {
-		err := query.Updates(result).Error
-		if err == sqlite3.ErrLocked {
-			fmt.Println("trying...")
-			continue
-		} else {
-			break
-		}
+	//mu.Lock()
+	//defer mu.Unlock()
+	err = query.Updates(result).Error
+	if err != nil {
+		fmt.Println("loc not updated")
 	}
 
 	//if result["distance"] != nil {
@@ -138,11 +129,11 @@ func UpdateLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
-	mu.Lock()
-	defer mu.Unlock()
+	//mu.Lock()
+	//defer mu.Unlock()
 	//db.Exec("pragma busy_timeout=30000;")
 	//
-	//db.Exec("PRAGMA journal_mode=DELETE;")
+	//db.Exec("PRAGMA journal_mode=OFF;")
 	//db.Exec("PRAGMA locking_mode=normal;")
 	vars := mux.Vars(r)
 	v := vars["id"]
@@ -211,6 +202,8 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	var result model.LocationAvg
 	query.Scan(&result)
 
+	fmt.Println("loc avg")
+
 	if result.Avg == float64(int64(result.Avg)) {
 		respondJSONforInt(w, http.StatusOK, result.Avg)
 	} else {
@@ -219,8 +212,8 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 func getLocationOr404(db *gorm.DB, id int, w http.ResponseWriter, r *http.Request) *model.Location {
-	mu.Lock()
-	defer mu.Unlock()
+	//mu.Lock()
+	//defer mu.Unlock()
 	loc := model.Location{}
 	if err := db.First(&loc, model.Location{ID: id}).Error; err != nil {
 		RespondError(w, http.StatusNotFound)

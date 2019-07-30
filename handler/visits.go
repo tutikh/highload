@@ -5,15 +5,13 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-	"github.com/mattn/go-sqlite3"
 	"hl/model"
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"sync"
 )
 
-var mu = &sync.Mutex{}
+//var mu = &sync.Mutex{}
 
 func CreateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	//mu := &sync.Mutex{}
@@ -26,7 +24,7 @@ func CreateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&vis); err != nil {
-		//fmt.Println("Decoding problem")
+		//fmt.Println("Decoding problem(vis)")
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
@@ -42,23 +40,20 @@ func CreateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
-	mu.Lock()
-	defer mu.Unlock()
-	for {
-		err := db.Save(&vis).Error
-		if err == sqlite3.ErrLocked {
-			continue
-		} else {
-			break
-		}
+	//mu.Lock()
+	//defer mu.Unlock()
+	err := db.Save(&vis).Error
+	if err != nil {
+		fmt.Println("vis not saved")
 	}
+	//fmt.Println("vis created")
 	RespondJSON2(w, http.StatusOK)
 	return
 }
 
 func GetVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	//db.Exec("pragma busy_timeout=30000;")
-	//db.Exec("PRAGMA journal_mode=DELETE;")
+	//db.Exec("PRAGMA journal_mode=OFF;")
 	//db.Exec("PRAGMA locking_mode=normal;")
 	vars := mux.Vars(r)
 	v := vars["id"]
@@ -68,6 +63,7 @@ func GetVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 	vis := getVisitOr404(db, id, w, r)
 	if vis == nil {
+		fmt.Println("vis not found(66)")
 		return
 	}
 	respondJSON(w, http.StatusOK, vis)
@@ -89,7 +85,7 @@ func UpdateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 	vis := getVisitOr404(db, id, w, r)
 	if vis == nil {
-		//fmt.Println("Visit not found")
+		//fmt.Println("Visit not found(88)")
 		return
 	}
 
@@ -97,7 +93,7 @@ func UpdateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(req, &result); err != nil {
-		//fmt.Println("Unmarshaling problem")
+		//fmt.Println("Unmarshaling problem(vis upd)")
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
@@ -109,16 +105,11 @@ func UpdateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	query := db.Model(vis)
-	mu.Lock()
-	defer mu.Unlock()
-	for {
-		err := query.Updates(result).Error
-		if err == sqlite3.ErrLocked {
-			fmt.Println("trying...")
-			continue
-		} else {
-			break
-		}
+	//mu.Lock()
+	//defer mu.Unlock()
+	err = query.Updates(result).Error
+	if err != nil {
+		fmt.Println("vis not updated")
 	}
 	//if result["location"] != nil {
 	//	query.Update("location", result["location"])
@@ -132,13 +123,14 @@ func UpdateVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	//if result["mark"] != nil {
 	//	query.Update("mark", result["mark"])
 	//}
+	//fmt.Println("vis updated")
 	RespondJSON2(w, http.StatusOK)
 	return
 }
 
 func getVisitOr404(db *gorm.DB, id int, w http.ResponseWriter, r *http.Request) *model.Visit {
-	mu.Lock()
-	defer mu.Unlock()
+	//mu.Lock()
+	//defer mu.Unlock()
 	vis := model.Visit{}
 	if err := db.First(&vis, model.Visit{ID: id}).Error; err != nil {
 		RespondError(w, http.StatusNotFound)
