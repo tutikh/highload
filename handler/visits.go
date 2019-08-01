@@ -63,7 +63,6 @@ func GetVisit(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 	vis := getVisitOr404(db, id, w, r)
 	if vis == nil {
-		fmt.Println("vis not found(66)")
 		return
 	}
 	respondJSON(w, http.StatusOK, vis)

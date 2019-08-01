@@ -26,17 +26,15 @@ func (a *App) Initialize(config *config.Config) {
 	//	config.DB.Charset)
 
 	var db *gorm.DB
-	//var db2 *gorm.DB
 	var err error
 
-	//db, err = gorm.Open(config.DB.Dialect, "/root/go/src/hl/load/trav.db?cache=shared")
-	//if err != nil {
-	//	log.Fatal("Could not connect database")
-	//}
 	db, err = gorm.Open("sqlite3", "/root/go/src/hl/load/trav.db?cache=shared&_journal_mode=wal&_mutex=no&mode=rwc")
 	if err != nil {
 		log.Fatal("Could not connect database")
 	}
+	db.Exec("PRAGMA PAGE_SIZE = 4096;")
+	db.Exec("PRAGMA default_cache_size=700000;")
+	db.Exec("PRAGMA cache_size=700000;")
 	//db.DB().SetMaxOpenConns(1)
 	//for {
 	//	db, err = gorm.Open(config.DB.Dialect, "trav.db")

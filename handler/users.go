@@ -80,7 +80,6 @@ func GetUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 	user := getUserOr404(db, id, w, r)
 	if user == nil {
-		fmt.Println("User not found(83)")
 		return
 	}
 	respondJSON(w, http.StatusOK, user)
@@ -163,7 +162,6 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 	user := model.User{}
 	if err := db.First(&user, model.User{ID: id}).Error; err != nil {
-		fmt.Println("User not found")
 		RespondError(w, http.StatusNotFound)
 		return
 	}
@@ -209,8 +207,6 @@ func GetUserVisits(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		RespondError(w, http.StatusBadRequest)
 		return
 	}
-
-	fmt.Println("users visits")
 
 	var result model.UserVisitsArray
 	query.Order("Visit.visited_at").Scan(&result.Visits)

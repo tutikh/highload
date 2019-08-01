@@ -105,3 +105,9 @@ func (u *User) BeforeSave() {
 	u.Age = (d - u.BirthDate) / 31536000
 	return
 }
+
+//func (u *User) BeforeUpdate() {
+//	d := GetDate()
+//	u.Age = (d - u.BirthDate) / 31536000
+//	return
+//}

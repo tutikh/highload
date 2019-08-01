@@ -64,7 +64,6 @@ func GetLocation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 	loc := getLocationOr404(db, id, w, r)
 	if loc == nil {
-		fmt.Println("loc not found(67)")
 		return
 	}
 	respondJSON(w, http.StatusOK, loc)
@@ -201,8 +200,6 @@ func GetAvg(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	var result model.LocationAvg
 	query.Scan(&result)
-
-	fmt.Println("loc avg")
 
 	if result.Avg == float64(int64(result.Avg)) {
 		respondJSONforInt(w, http.StatusOK, result.Avg)
